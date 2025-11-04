@@ -1,0 +1,248 @@
+% \documentclass[10pt]{beamer}
+\documentclass[handout]{beamer}
+
+\usetheme[progressbar=frametitle]{metropolis}
+\usepackage{appendixnumberbeamer}
+\setbeamercolor{background canvas}{bg=white}
+
+\usepackage{booktabs}
+\usepackage[scale=2]{ccicons}
+
+\usepackage{pgfplots}
+\usepackage{svg}
+\usepgfplotslibrary{dateplot}
+
+\usepackage{xspace}
+\newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
+
+\usepackage{caption}
+\usepackage{subcaption}
+\captionsetup{font=scriptsize,labelfont=scriptsize}
+
+\usepackage{adjustbox}
+
+% -------symbols--------
+\definecolor{cr}{RGB}{230, 92, 0}
+\definecolor{red}{RGB}{255, 0, 0}
+\newcommand{\ca}[1]{\textcolor{cr}{#1}}
+\newcommand{\re}[1]{\textcolor{red}{#1}}
+
+\begin{document}
+
+\begin{frame}
+    \centering
+    \includegraphics[width=1\textwidth]{title.png}
+\end{frame}
+
+\begin{frame}[<+->]{Motivação}
+    \begin{itemize}
+    \setlength\itemsep{1em}
+        \item Salas cirúrgicas representam > 30\% dos custos hospitalares
+        \item Incerteza nas durações de cirurgias gera:
+            \begin{itemize}
+                \item Horas extras
+                \item Tempo ocioso
+                \item Perda de receita
+            \end{itemize}
+        \item Necessidade de maior previsibilidade
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Objetivo}
+Propor um modelo que reduza a variabilidade dos custos operacionais sob incerteza:
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item Minimizar custos de \ca{horas extras} e \ca{ociosidade} de salas
+        \item Melhorar desempenho em cenários críticos
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Problema Estudado}
+    \begin{itemize}
+    \setlength\itemsep{1em}
+    \item Conjunto de pacientes eletivos
+    \item Conjunto de salas cirúrgicas
+    \item Durações cirúrgicas não determinísticas
+    \item \ca{Decisões}:
+        \begin{itemize}
+            \item Alocação às salas
+            \item Sequenciamento cirúrgico
+            \item Tempos de início (usado somente para avaliar o custo)
+        \end{itemize}
+        \item Ou seja, \ca{dadas as durações cirúrgicas, como alocar e sequenciar pacientes nas salas?}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Incerteza nas Durações}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item Distribuições probabilísticas (assumem lognormal)
+        \item Monte Carlo para gerar \ca{cenários}
+        \begin{itemize}
+            \item Cada cenário = uma possível realização (sorteio) das durações dos pacientes
+            \item Exemplo: 100 cenários simulados
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Otimização por Valor Esperado (EV): Limitação}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item Modelo ``neutro ao risco''
+        \item Apenas minimiza valor esperado do custo (média ponderada)
+        \item Ignora variabilidade e extremos
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{O que é VaR?}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item \ca{Value-at-Risk}
+        \item Usado em finanças para medir risco de perdas
+        \item Limiar que cobre \textit{$\alpha$} da distribuição
+        \item Exemplo: 
+        \begin{itemize}
+            \item Distribuição de durações de cirurgias: $[30, 35, 60, 70, 85, 87, 89, 91, 95, 121]$
+            \item VaR 80\% ($\alpha=0.8$) = 91 minutos
+            \item 20\% das durações excedem esse valor
+        \end{itemize}
+        \item Limitação: não informa sobre a gravidade das perdas além do VaR
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{O que é CVaR?}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item \ca{Conditional Value-at-Risk}
+        \item Custo médio dos piores cenários (cauda da distribuição)
+        \item Foca em minimizar perdas extremas
+        \item Exemplo:
+        \begin{itemize}
+            \item Usando o exemplo anterior com VaR 80\% = 91 minutos
+            \item CVaR 80\% = ~108 minutos
+            \item i.e., a média das durações que excedem 91 minutos é ~108 minutos
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Modelo CVaR}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item Formulação SMILP (Stochastic MILP)
+        \item Variável $\zeta$: aproximador de VaR
+        \item Minimiza custo esperado acima de $\zeta$
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Modelo CVaR}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \includegraphics[width=1.1\textwidth]{symb_1.png}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \centering
+            \includegraphics[width=1.1\textwidth]{symb_2.png}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+
+\begin{frame}[<+->]{Modelo CVaR}
+    \centering
+    \includegraphics[width=.8\textwidth]{M1.png}
+\end{frame}
+
+
+\begin{frame}[<+->]{Modelo CVaR}
+    \centering
+    \includegraphics[width=.8\textwidth]{M2.png}
+\end{frame}
+
+
+\begin{frame}[<+->]{Experimentos Computacionais}
+    \action{Parâmetros:}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{parametros.png}
+    \end{center}
+    \bigskip
+
+    \action{Comparação de custos associados entre as abordagens:}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item Modelo por Valor Esperado (EV) -- só definir o $\alpha = 0$ na formulação CVaR
+        \item Modelo CVaR
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Vetor de Utilização ($\tau$)}
+    \begin{itemize}
+        \item Um único planejamento é gerado pelo modelo (alocação + sequência)
+        \item Os tempos de cirurgia variam em cada cenário
+        \item Para cada cenário, calcula-se:
+        \begin{itemize}
+            \item tempo extras das salas (multiplicado por um custo)
+            \item tempo ocioso das salas (multiplicado por um custo)
+        \end{itemize}
+        \item A soma desses valores em cada cenário forma um vetor:
+        \[
+        \tau = [\tau_1, \tau_2, \ldots, \tau_{|S|}]
+        \]
+        \item O vetor $\tau$ representa como o plano se comporta em todos os futuros possíveis
+        \item Então os autores calculam a média ($\mu_{CVaR}$) e o desvio padrão ($\sigma_{CVaR}$) desse vetor para análise
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Resultados}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{results_1.png}
+    \end{center}
+    \bigskip
+
+    \action{Quanto maior o $\alpha$, menor a variabilidade e maior o custo médio }
+\end{frame}
+
+
+\begin{frame}[<+->]{Melhoria em Piores Cenários}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item Redução \textbf{~9\%} no pior caso
+        \item 2.5\% a 4\% de economia concentrada nos piores cenários
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Complexidade Computacional}
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{table2.png}
+    \end{center}
+    \bigskip
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{table3.png}
+    \end{center}
+
+\end{frame}
+
+
+\begin{frame}[<+->]{Contribuições Científicas}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item 1ª aplicação de CVaR em OR scheduling \textit{(não mais...)}
+        \item Melhor desempenho sob incerteza
+        \item Flexibilidade de decisão baseada em risco
+        \item CVaR → escalonamentos mais estáveis e realistas
+        \item Reduz a imprevisibilidade operacional
+    \end{itemize}
+\end{frame}
+
+\end{document}
