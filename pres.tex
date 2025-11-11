@@ -1,5 +1,5 @@
-% \documentclass[10pt]{beamer}
-\documentclass[handout]{beamer}
+\documentclass[10pt]{beamer}
+% \documentclass[handout]{beamer}
 
 \usetheme[progressbar=frametitle]{metropolis}
 \usepackage{appendixnumberbeamer}
@@ -67,11 +67,11 @@ Propor um modelo que reduza a variabilidade dos custos operacionais sob incertez
     \item Durações cirúrgicas não determinísticas
     \item \ca{Decisões}:
         \begin{itemize}
-            \item Alocação às salas
+            \item Alocação de pacientes às salas
             \item Sequenciamento cirúrgico
             \item Tempos de início (usado somente para avaliar o custo)
         \end{itemize}
-        \item Ou seja, \ca{dadas as durações cirúrgicas, como alocar e sequenciar pacientes nas salas?}
+        \item Ou seja, \ca{dadas as durações cirúrgicas, como alocar e sequenciar pacientes nas salas \textbf{minimizando custos de cancelamento e overtime?}}
     \end{itemize}
 \end{frame}
 
@@ -79,7 +79,7 @@ Propor um modelo que reduza a variabilidade dos custos operacionais sob incertez
 \begin{frame}[<+->]{Incerteza nas Durações}
     \begin{itemize}
         \setlength\itemsep{1em}
-        \item Distribuições probabilísticas (assumem lognormal)
+        \item Distribuições probabilísticas (pressupõem lognormal)
         \item Monte Carlo para gerar \ca{cenários}
         \begin{itemize}
             \item Cada cenário = uma possível realização (sorteio) das durações dos pacientes
@@ -95,6 +95,9 @@ Propor um modelo que reduza a variabilidade dos custos operacionais sob incertez
         \item Modelo ``neutro ao risco''
         \item Apenas minimiza valor esperado do custo (média ponderada)
         \item Ignora variabilidade e extremos
+        \begin{itemize}
+            \item Na média, as coisas parecem boas, mas quando o pior caso acontece, é um desastre ``inesperado''
+        \end{itemize}
     \end{itemize}
 \end{frame}
 
@@ -128,6 +131,69 @@ Propor um modelo que reduza a variabilidade dos custos operacionais sob incertez
             \item CVaR 80\% = ~108 minutos
             \item i.e., a média das durações que excedem 91 minutos é ~108 minutos
         \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{VaR e CVaR}
+    \centering
+    \includegraphics[width=0.8\textwidth]{var_cvar.png}
+\end{frame}
+
+
+% \begin{frame}[<+->]{Definição Formal de CVaR}
+%     \action{ Seja $Z$ uma variável aleatória representando o custo total. }
+%     \begin{itemize}
+%         \setlength\itemsep{1em}
+%         \item VaR em nível $\alpha$:
+%             \[
+%             \text{VaR}_{\alpha}(Z) = \inf \{ z \mid P(Z \leq z) \geq \alpha \ }
+%             \]
+%         \item CVaR em nível $\alpha$:
+%             \[
+%             \text{CVaR}_{\alpha}(Z) = E[ Z \mid Z \geq \text{VaR}_{\alpha}(Z) ]
+%             \]
+%     \end{itemize}
+% \end{frame}
+
+
+\begin{frame}[<+->]{Definição Formal de CVaR - dos autores}
+    \action{Seja $f(x,y)$ a função objetivo com variáveis de decisão $x$ e variáveis aleatórias $y$ com densidade $p(y)$.}
+    \begin{itemize}
+        \setlength\itemsep{1em}
+        \item VaR em nível $\alpha$:
+            \[
+                {\zeta}_{\alpha}(x) = \min \{\zeta \in \mathbb{R} \mid \psi(f(x,y) \leq \zeta) \geq \alpha \}
+            \]
+        \item CVaR em nível $\alpha$:
+            \[
+                {\phi}_{\alpha}(x) = \frac{1}{1-\alpha} \int_{f(x,y) \geq {\zeta}_{\alpha}(x)} f(x,y) p(y) dy
+            \]
+        \item Onde:
+            \begin{itemize}
+                \item $x$: decisões de alocação e sequenciamento
+                \item $y$: durações cirúrgicas incertas
+                \item $f(x,y)$: custo total (horas extras + ociosidade)
+            \end{itemize}
+        \item \ca{Problema:} a formulação acima é difícil de resolver (otimizar) diretamente devido à integral
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}[<+->]{Definição Formal de CVaR - dos autores}
+    \begin{itemize}
+        % \setlength\itemsep{1em}
+        \item A função CVaR ${\phi}_{\alpha}(x)$ pode ser simplificada como:
+            \[
+                {F(x,\zeta)} = \zeta + \frac{1}{1-\alpha} \int_{y \geq \mathbb{R}^{m}} [f(x,y) - \zeta]^+ p(y) dy
+            \]
+        \item Onde $[a]^+ = \max(a,0)$
+        \item Então, minimizando $F(x,\zeta)$ em relação a $x$ e $\zeta$ é equivalente a minimizar o CVaR
+        \item Assim, ao gerar um conjunto de cenários $S$, a integral pode ser aproximada por uma soma:
+            \[
+                {F(x,\zeta)} = \zeta + \frac{1}{|S|(1-\alpha)} \sum_{k=1}^{|S|} [f(x,y_k) - \zeta]^+
+            \]
+        \item Possibilitando a formulação de um programa linear pra otimizar CVaR do custo
     \end{itemize}
 \end{frame}
 
@@ -213,13 +279,13 @@ Propor um modelo que reduza a variabilidade dos custos operacionais sob incertez
 \end{frame}
 
 
-\begin{frame}[<+->]{Melhoria em Piores Cenários}
-    \begin{itemize}
-        \setlength\itemsep{1em}
-        \item Redução \textbf{~9\%} no pior caso
-        \item 2.5\% a 4\% de economia concentrada nos piores cenários
-    \end{itemize}
-\end{frame}
+% \begin{frame}[<+->]{Melhoria em Piores Cenários}
+%     \begin{itemize}
+%         \setlength\itemsep{1em}
+%         \item Redução \textbf{~9\%} no pior caso em relação ao modelo EV
+%         \item 2.5\% a 4\% de economia concentrada nos piores cenários
+%     \end{itemize}
+% \end{frame}
 
 
 \begin{frame}[<+->]{Complexidade Computacional}
